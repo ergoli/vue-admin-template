@@ -12,7 +12,7 @@
         :collapse-transition="false"
         mode="vertical"
       >
-        <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path" />
+        <sidebar-item v-for="item in menuData" :key="item._PK_" :item="item" />
       </el-menu>
     </el-scrollbar>
   </div>
@@ -23,9 +23,15 @@ import { mapGetters } from 'vuex'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
+import api from '@/api/api'
 
 export default {
   components: { SidebarItem, Logo },
+  data() {
+    return {
+      menuData: []
+    }
+  },
   computed: {
     ...mapGetters([
       'sidebar'
@@ -51,6 +57,11 @@ export default {
     isCollapse() {
       return !this.sidebar.opened
     }
+  },
+  created() {
+    api.doAct('SY_COMM_INFO', 'menu').then(res => {
+      this.menuData = res.data
+    })
   }
 }
 </script>

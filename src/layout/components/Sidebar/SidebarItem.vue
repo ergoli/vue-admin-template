@@ -1,32 +1,39 @@
 <template>
   <div v-if="item" class="menu-wrapper">
     <template v-if="!(item.CHILD && item.CHILD.length)">
-      <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path)">
-        <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest}">
-          <item :icon="onlyOneChild.meta.icon||(item.meta&&item.meta.icon)" :title="item.N" />
-        </el-menu-item>
-      </app-link>
+      <el-menu-item :index="item.K" @click="sidebarItemClick(item.INFO)">
+        <div class="title">
+          <i class="el-icon-document"/>
+          <span class="title-text">{{ item.N }}</span>
+        </div>      
+      </el-menu-item>
     </template>
 
     <el-submenu v-else ref="subMenu" :index="item.K" popper-append-to-body>
       <template slot="title">
-        <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.N" />
+        <div class="title">
+          <i class="el-icon-tickets"/>
+          <span class="title-text">{{ item.N }}</span>
+        </div>      
       </template>
-      <sidebar-item
-        v-for="child in item.CHILD"
-        :key="child.K"
-        :is-nest="true"
-        :item="child"
-        :base-path="resolvePath(child.path)"
-        class="nest-menu"
-      />
+      <template v-for="child in item.CHILD">
+        <sidebar-item
+          v-if="child.CHILD&&child.CHILD.length"
+          :item="child"
+          :key="child.K"
+          class="nest-menu" />
+        <el-menu-item v-else :index="child.K" :key="child.K" @click="sidebarItemClick(child.INFO)">
+          <div class="title">
+            <i class="el-icon-document"/>
+            <span class="title-text">{{ child.N }}</span>
+          </div>
+        </el-menu-item>
+      </template>
     </el-submenu>
   </div>
 </template>
 
 <script>
-import path from 'path'
-import { isExternal } from '@/utils/validate'
 import Item from './Item'
 import AppLink from './Link'
 import FixiOSBug from './FixiOSBug'
@@ -51,45 +58,33 @@ export default {
     }
   },
   data() {
-    // To fix https://github.com/PanJiaChen/vue-admin-template/issues/237
-    // TODO: refactor with render function
-    this.onlyOneChild = null
     return {}
   },
   methods: {
-    hasOneShowingChild(children = [], parent) {
-      const showingChildren = children.filter(item => {
-        if (item.hidden) {
-          return false
-        } else {
-          // Temp set(will be used if only has one showing child)
-          this.onlyOneChild = item
-          return true
-        }
-      })
-
-      // When there is only one child router, the child router is displayed by default
-      if (showingChildren.length === 1) {
-        return true
+    sidebarItemClick(info) {
+      if (info) {
+        this.$router.push({
+          path: '/article',
+          query: {
+            SERVICE_ID: info
+          }
+        })
       }
-
-      // Show parent if there are no child router to display
-      if (showingChildren.length === 0) {
-        this.onlyOneChild = { ... parent, path: '', noShowingChildren: true }
-        return true
-      }
-
-      return false
-    },
-    resolvePath(routePath) {
-      if (isExternal(routePath)) {
-        return routePath
-      }
-      if (isExternal(this.basePath)) {
-        return this.basePath
-      }
-      return path.resolve(this.basePath, routePath)
     }
   }
 }
 </script>
+
+<style scoped>
+  .title{
+    display: flex;
+    align-items: center;
+  }
+  .title-text{
+    display: block;
+    width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
